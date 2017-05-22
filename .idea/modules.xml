@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/AndroidSwipeableCardStack-master.iml" filepath="$PROJECT_DIR$/AndroidSwipeableCardStack-master.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CardStack/CardStack.iml" filepath="$PROJECT_DIR$/CardStack/CardStack.iml" />
+      <module fileurl="file://$PROJECT_DIR$/DemoApp/DemoApp.iml" filepath="$PROJECT_DIR$/DemoApp/DemoApp.iml" />
+    </modules>
+  </component>
+</project>
