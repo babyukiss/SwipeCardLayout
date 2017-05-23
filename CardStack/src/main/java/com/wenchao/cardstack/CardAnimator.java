@@ -222,18 +222,41 @@ public class CardAnimator {
                 aCollection.add(layoutAnim);
             }
         }
+        if (direction == DIRECTION_BOTTOM_RIGHT || direction == DIRECTION_TOP_RIGHT) {
+            RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mLastView.getLayoutParams();
+            RelativeLayout.LayoutParams endLayout = cloneParams(layoutParams);
+            ValueAnimator layoutAnim = ValueAnimator.ofObject(new RelativeLayoutParamsEvaluator(), endLayout, mLastParams);
+            layoutAnim.setDuration(250);
+            layoutAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator value) {
+                    mLastView.setLayoutParams((LayoutParams) value.getAnimatedValue());
+                }
 
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mLastView.getLayoutParams();
-        RelativeLayout.LayoutParams endLayout = cloneParams(layoutParams);
-        ValueAnimator layoutAnim = ValueAnimator.ofObject(new RelativeLayoutParamsEvaluator(), endLayout, mLastParams);
-        layoutAnim.setDuration(250);
-        layoutAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator value) {
-                mLastView.setLayoutParams((LayoutParams) value.getAnimatedValue());
-            }
-        });
-        aCollection.add(layoutAnim);
+            });
+            layoutAnim.addListener(new AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    mLastView.setVisibility(View.VISIBLE);
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mLastView.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    mLastView.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            aCollection.add(layoutAnim);
+        }
         as.addListener(new AnimatorListenerAdapter() {
 
             @Override
@@ -248,9 +271,7 @@ public class CardAnimator {
                     RelativeLayout.LayoutParams paramsCopy = cloneParams(params);
                     mLayoutsMap.put(v, paramsCopy);
                 }
-
             }
-
         });
         as.playTogether(aCollection);
         as.start();
@@ -285,15 +306,37 @@ public class CardAnimator {
             });
             layoutAnim.start();
         }
-       RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mLastView.getLayoutParams();
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) mLastView.getLayoutParams();
         RelativeLayout.LayoutParams endLayout = cloneParams(layoutParams);
 
-        ValueAnimator layoutAnim = ValueAnimator.ofObject(new RelativeLayoutParamsEvaluator(), endLayout, mLastParams);
+        RelativeLayout.LayoutParams toParams = getMoveParams(mLastView, 0, -REMOTE_DISTANCE);
+        ValueAnimator layoutAnim = ValueAnimator.ofObject(new RelativeLayoutParamsEvaluator(), endLayout, toParams);
         layoutAnim.setDuration(100);
         layoutAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator value) {
                 mLastView.setLayoutParams((LayoutParams) value.getAnimatedValue());
+            }
+        });
+        layoutAnim.addListener(new AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+//                mLastView.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mLastView.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                mLastView.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
             }
         });
         layoutAnim.start();
@@ -337,6 +380,7 @@ public class CardAnimator {
                     CardUtils.moveFrom(v, l, 0, -(int) (Math.abs(x_diff) * index * 0.05), mGravity);
                 }
             }
+            mLastView.setVisibility(View.VISIBLE);
             CardUtils.moveFrom(mLastView, mLastParams, -mLastView.getWidth() + (int) (Math.abs(x_diff) * 0.85), 0, mGravity);
         }
     }

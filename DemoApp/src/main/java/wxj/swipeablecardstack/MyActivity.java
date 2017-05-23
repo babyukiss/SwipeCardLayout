@@ -38,7 +38,6 @@ public class MyActivity extends Activity {
         if (mCardStack.getAdapter() != null) {
             Log.i("MyActivity", "Card Stack size: " + mCardStack.getAdapter().getCount());
         }
-        mCardStack.setEnableLoop(true);
     }
 
 
