@@ -29,8 +29,9 @@ public class CardStack extends RelativeLayout {
     private boolean mEnableRotation;
     private int mGravity;
     private int mColor = -1;
-    private int mIndex = 0;
-    private int mPreIndex = 0;
+    private int mCurIndex = 0;
+//    private int mIndex = 0;
+//    private int mPreIndex = 0;
     private int mNumVisible = 4;
     private boolean canSwipe = true;
     private ArrayAdapter<?> mAdapter;
@@ -137,7 +138,7 @@ public class CardStack extends RelativeLayout {
 
     public int getCurrIndex() {
         //sync?
-        return mIndex;
+        return mCurIndex;
     }
 
     //only necessary when I need the attrs from xml, this will be used when inflating layout
@@ -199,7 +200,7 @@ public class CardStack extends RelativeLayout {
     }
 
     private void reset(boolean resetIndex, boolean animFirst) {
-        if (resetIndex) mIndex = 0;
+//        if (resetIndex) mIndex = 0;
         removeAllViews();
         viewCollection.clear();
         for (int i = 0; i < mNumVisible; i++) {
@@ -285,14 +286,15 @@ public class CardStack extends RelativeLayout {
                             public void onAnimationEnd(Animator arg0) {
                                 mCardAnimator.initLayout();
 
-                                mEventListener.discarded(mIndex, direction);
+                                mEventListener.discarded(mCurIndex, direction);
 
                                 //mIndex = mIndex%mAdapter.getCount();
                                 if (direction == DIRECTION_TOP_LEFT || direction == DIRECTION_BOTTOM_LEFT) {
-                                    mIndex++;
-//                                    loadNext();
+//                                    mIndex++;
+                                    loadNext();
                                 } else {
-//                                    loadPre();
+//                                    mPreIndex++;
+                                    loadPre();
                                 }
 
                                 viewCollection.get(0).setOnTouchListener(null);
@@ -368,7 +370,7 @@ public class CardStack extends RelativeLayout {
         Log.d("CardStack", "loadData");
         for (int i = mNumVisible - 1; i >= 0; i--) {
             ViewGroup parent = (ViewGroup) viewCollection.get(i);
-            int index = (mIndex + mNumVisible - 1) - i;
+            int index = (mCurIndex + mNumVisible - 1) - i;
             if (index > mAdapter.getCount() - 1) {
                 parent.setVisibility(View.GONE);
 
@@ -392,19 +394,21 @@ public class CardStack extends RelativeLayout {
             contentView = lf.inflate(mContentResource, null);
         }
         return contentView;
-
     }
 
     // 加载下一个
     private void loadNext() {
         ViewGroup parent = (ViewGroup) viewCollection.get(0);
-        int nextIndex = ((mNumVisible - 1) + mIndex);
+        int listCount = mAdapter.getCount();
+        int nextIndex = ((mNumVisible - 1) + mCurIndex + 1);
+        // 当前界面显示的数据index, 用于获取pre item
+        mCurIndex = (mCurIndex + 1) % listCount;
 
         // 超出索引
-        if (nextIndex > mAdapter.getCount() - 1) {
+        if (nextIndex > listCount - 1) {
             if (mEnableLoop) {
                 // 循环处理
-                nextIndex = nextIndex % mAdapter.getCount();
+                nextIndex = nextIndex % listCount;
             } else {
                 parent.setVisibility(View.GONE);
                 return;
@@ -415,38 +419,41 @@ public class CardStack extends RelativeLayout {
         parent.removeAllViews();
         parent.addView(child);
 
-        int nowIndex = (mNumVisible - 1) + mIndex - 1;
-        if (nowIndex > mAdapter.getCount() - 1) {
-            if (mEnableLoop) {
-                // 循环处理
-                nowIndex = nowIndex % mAdapter.getCount();
-            }
+        int preIndex = 0;
+        if (mCurIndex == 0) {
+            preIndex = listCount - 1;
+        } else {
+            preIndex = mCurIndex - 1;
         }
         ViewGroup parent2 = (ViewGroup)mLastView;
         parent2.removeAllViews();
-        View child2 = mAdapter.getView(nowIndex, getContentView(), parent2);
+        View child2 = mAdapter.getView(preIndex, getContentView(), parent2);
         parent2.addView(child2);
     }
 
     // 加载上一个
     private void loadPre() {
         ViewGroup parent = (ViewGroup) viewCollection.get(3);
-        int nextIndex = ((mNumVisible - 1) + mIndex);
-
-        // 超出索引
-        if (nextIndex > mAdapter.getCount() - 1) {
-            if (mEnableLoop) {
-                // 循环处理
-                nextIndex = nextIndex % mAdapter.getCount();
-            } else {
-                parent.setVisibility(View.GONE);
-                return;
-            }
+        int listCount = mAdapter.getCount();
+        if (mCurIndex == 0) {
+            mCurIndex = listCount - 1;
+        } else {
+            mCurIndex -= 1;
         }
-
-        View child = mAdapter.getView(nextIndex, getContentView(), parent);
+        View child = mAdapter.getView(mCurIndex, getContentView(), parent);
         parent.removeAllViews();
         parent.addView(child);
+
+        int preIndex = 0;
+        if (mCurIndex == 0) {
+            preIndex = listCount - 1;
+        } else {
+            preIndex = mCurIndex - 1;
+        }
+        ViewGroup parent2 = (ViewGroup)mLastView;
+        parent2.removeAllViews();
+        View child2 = mAdapter.getView(preIndex, getContentView(), parent2);
+        parent2.addView(child2);
     }
 
     /**
@@ -459,8 +466,9 @@ public class CardStack extends RelativeLayout {
     }
 
     public void undo() {
-        if (mIndex == 0) return;
-        mIndex --;
+        if (mCurIndex == 0) return;
+        mCurIndex--;
+//        mIndex --;
         reset(false, true);
     }
 }
