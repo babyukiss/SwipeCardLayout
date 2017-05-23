@@ -144,14 +144,20 @@ public class CardAnimator {
         }
     }
 
+    private void moveToFront(View child) {
+        final ViewGroup parent = (ViewGroup) child.getParent();
+        if (null != parent) {
+            parent.removeView(child);
+            parent.addView(child, 3); // 移到第一个
+        }
+    }
+
     /**
      * @param remove true 卡片排序，抽出一个，底部上来一个; false 恢复一个数据
      */
     private void reorder(boolean remove) {
         if (remove) {
             View temp = getTopView();
-            //RelativeLayout.LayoutParams tempLp = mLayoutsMap.get(mCardCollection.get(0));
-            //mLayoutsMap.put(temp,tempLp);
             moveToBack(temp);
 
             for (int i = (mCardCollection.size() - 1); i > 0; i--) {
@@ -165,11 +171,20 @@ public class CardAnimator {
                 //mLayoutsMap.put(current,lp);
             }
             mCardCollection.set(0, temp);
+        } else {
+            View bottomView = mCardCollection.get(0);
+            for (int i = 0; i < mCardCollection.size() - 1; i++) {
+                View current = mCardCollection.get(i+1);
+                //current replace next
+                mCardCollection.set(i, current);
+            }
+            moveToFront(bottomView);
+            mCardCollection.set(3, bottomView);
         }
     }
 
     // 销毁卡片
-    public void discard(int direction, final AnimatorListener al) {
+    public void discard(final int direction, final AnimatorListener al) {
         AnimatorSet as = new AnimatorSet();
         ArrayList<Animator> aCollection = new ArrayList<Animator>();
 
@@ -261,7 +276,11 @@ public class CardAnimator {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                reorder(true);
+                if (direction == DIRECTION_BOTTOM_LEFT || direction == DIRECTION_TOP_LEFT) {
+                    reorder(true);
+                } else {
+                    reorder(false);
+                }
                 if (al != null) {
                     al.onAnimationEnd(animation);
                 }

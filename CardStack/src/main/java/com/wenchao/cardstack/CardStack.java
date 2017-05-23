@@ -20,6 +20,9 @@ import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
 
+import static com.wenchao.cardstack.CardUtils.DIRECTION_BOTTOM_LEFT;
+import static com.wenchao.cardstack.CardUtils.DIRECTION_TOP_LEFT;
+
 
 public class CardStack extends RelativeLayout {
 
@@ -27,6 +30,7 @@ public class CardStack extends RelativeLayout {
     private int mGravity;
     private int mColor = -1;
     private int mIndex = 0;
+    private int mPreIndex = 0;
     private int mNumVisible = 4;
     private boolean canSwipe = true;
     private ArrayAdapter<?> mAdapter;
@@ -280,11 +284,16 @@ public class CardStack extends RelativeLayout {
                             @Override
                             public void onAnimationEnd(Animator arg0) {
                                 mCardAnimator.initLayout();
-                                mIndex++;
+
                                 mEventListener.discarded(mIndex, direction);
 
                                 //mIndex = mIndex%mAdapter.getCount();
-                                loadLast();
+                                if (direction == DIRECTION_TOP_LEFT || direction == DIRECTION_BOTTOM_LEFT) {
+                                    mIndex++;
+//                                    loadNext();
+                                } else {
+//                                    loadPre();
+                                }
 
                                 viewCollection.get(0).setOnTouchListener(null);
                                 viewCollection.get(viewCollection.size() - 1)
@@ -369,10 +378,11 @@ public class CardStack extends RelativeLayout {
                 parent.setVisibility(View.VISIBLE);
             }
         }
+        int dataCount = mAdapter.getCount();
         ViewGroup parent = (ViewGroup) mLastView;
-        View child = mAdapter.getView(mNumVisible, getContentView(), this);
+        View child = mAdapter.getView(dataCount - 1, getContentView(), this);
         parent.addView(child);
-        parent.setVisibility(View.VISIBLE);
+        parent.setVisibility(View.GONE);
     }
 
     private View getContentView() {
@@ -386,29 +396,57 @@ public class CardStack extends RelativeLayout {
     }
 
     // 加载下一个
-    private void loadLast() {
+    private void loadNext() {
         ViewGroup parent = (ViewGroup) viewCollection.get(0);
-        int lastIndex = ((mNumVisible - 1) + mIndex);
+        int nextIndex = ((mNumVisible - 1) + mIndex);
 
         // 超出索引
-        if (lastIndex > mAdapter.getCount() - 1) {
+        if (nextIndex > mAdapter.getCount() - 1) {
             if (mEnableLoop) {
                 // 循环处理
-                lastIndex = lastIndex % mAdapter.getCount();
+                nextIndex = nextIndex % mAdapter.getCount();
             } else {
                 parent.setVisibility(View.GONE);
                 return;
             }
         }
 
-        View child = mAdapter.getView(lastIndex, getContentView(), parent);
+        View child = mAdapter.getView(nextIndex, getContentView(), parent);
         parent.removeAllViews();
         parent.addView(child);
 
+        int nowIndex = (mNumVisible - 1) + mIndex - 1;
+        if (nowIndex > mAdapter.getCount() - 1) {
+            if (mEnableLoop) {
+                // 循环处理
+                nowIndex = nowIndex % mAdapter.getCount();
+            }
+        }
         ViewGroup parent2 = (ViewGroup)mLastView;
         parent2.removeAllViews();
-        View child2 = mAdapter.getView(lastIndex, getContentView(), parent2);
+        View child2 = mAdapter.getView(nowIndex, getContentView(), parent2);
         parent2.addView(child2);
+    }
+
+    // 加载上一个
+    private void loadPre() {
+        ViewGroup parent = (ViewGroup) viewCollection.get(3);
+        int nextIndex = ((mNumVisible - 1) + mIndex);
+
+        // 超出索引
+        if (nextIndex > mAdapter.getCount() - 1) {
+            if (mEnableLoop) {
+                // 循环处理
+                nextIndex = nextIndex % mAdapter.getCount();
+            } else {
+                parent.setVisibility(View.GONE);
+                return;
+            }
+        }
+
+        View child = mAdapter.getView(nextIndex, getContentView(), parent);
+        parent.removeAllViews();
+        parent.addView(child);
     }
 
     /**
